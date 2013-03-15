@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>BOSH Attach Example</title>
+    <link rel="stylesheet" type="text/css" href="/css/styles.css"/>
+  </head>
+  <body>
+    <div class="container">
+      <form id="authForm">
+        Pre bound session:
+        <input type="text" name="jid" placeholder="JID"/>
+        <input type="text" name="sid" placeholder="SID"/>
+        <input type="text" name="rid" placeholder="RID"/>
+        <button type="submit">Attach</button>
+      </form>
+      <ul id="console" class="console"></ul>
+      <ul id="log" class="console"></ul>
+    </div>
+    <script type="text/javascript" src="/lib/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="/lib/strophe.min.js"></script>
+    <script type="text/javascript" src="/config.js"></script>
+    <script type="text/javascript" src="/js/auth.js"></script>
+    <script type="text/javascript" src="/js/console.js"></script>
+    <script type="text/javascript" src="/js/attach.js"></script>
+  </body>
+</html>
