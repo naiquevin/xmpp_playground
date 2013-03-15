@@ -5,37 +5,36 @@ from xml.dom import minidom
 from contextlib import contextmanager
 from urlparse import urlparse
 import requests
-
-
-BOSH_SERVICE = 'http://localhost/http-bind'
-parsed_bosh_service = urlparse(BOSH_SERVICE)
+from functools import partial, wraps
 
 
 ## Public API
 
-def http_bind(username, domain, password):
+def http_bind(bosh_service, username, domain, password):
+    bs = urlparse(bosh_service)
+    to = bs.netloc
+
     with session() as s:
-        jid = '%s@%s' % (username, domain)
         rid = randint(0, 1000000000)
-        r1 = http_bind_request(s, create_session(rid))
-        d1 = document(r1.content)
-        sid = get_sid(d1)
-        mechanisms = get_mechanisms(d1)
+
+        send_request = partial(http_bind_request,
+                               bosh_service=bosh_service,
+                               session=s)
+
+        sid, mechanisms = create_session(to, rid, send_request)
         print 'After Session creation request: ', sid, mechanisms
         rid += 1
-        r2 = http_bind_request(s, auth(username, password, sid, rid))
-        d2 = document(r2.content)
-        if is_success(d2):
+        auth_success = auth(username, password, sid, rid, send_request)
+        if auth_success:
             print 'Auth is successful'
             rid += 1
-            r3 = http_bind_request(s, request_restart(sid, rid))
+            request_restart(to, sid, rid, send_request)
             rid += 1
-            if r3.status_code == 200:
-                r4 = http_bind_request(s, bind_resource(sid, rid, 'httpclient'))
-                print r4.content
+            full_jid = bind_resource(sid, rid, 'httpclient', send_request)
         else:
-            raise Exception('Auth failed with status_code: %r and reason: %r' % (r2.status_code, r2.reason))
-    return (jid, sid, rid)
+            raise BoshClientException('Auth failed')
+            
+    return (full_jid, sid, rid)
 
 
 ## Internals
@@ -46,18 +45,66 @@ def session():
     s.headers.update({"Content-type": "text/plain; charset=UTF-8",
                       "Accept": "text/xml"})
     yield s
-    s.close()    
+    s.close()
 
 
-def http_bind_request(s, stanza):
-    r = s.post(BOSH_SERVICE, data=stanza)
-    return r
+def resp_doc(func):
+    @wraps(func)
+    def dec(stanza, bosh_service, session):
+        r = func(stanza, bosh_service, session)
+        if r.status_code != 200:
+            raise BoshClientException(
+                'Response failed with '
+                'Status Code: %s, '
+                'Reason: %s'
+                ) % (r.status_code, r.reason)
+        return document(r.content)
+    return dec
 
 
-## Sequence of payloads
+@resp_doc
+def http_bind_request(stanza, bosh_service, session):
+    request = session.post(bosh_service, data=stanza)
+    return request
 
-def create_session(rid):
-    parsed_url = parsed_bosh_service
+
+## Exceptions
+
+class BoshClientException(Exception):
+    pass
+
+
+## Functions to send requests
+
+def create_session(to, rid, send_func):
+    stanza = create_session_stanza(to, rid)
+    doc_elem = send_func(stanza)    
+    sid = get_sid(doc_elem)
+    mechanisms = get_mechanisms(doc_elem)
+    return (sid, mechanisms)
+
+
+def auth(username, password, sid, rid, send_func):
+    stanza = auth_stanza(username, password, sid, rid)
+    doc_elem = send_func(stanza)
+    return is_success(doc_elem)
+
+
+def request_restart(to, sid, rid, send_func):
+    stanza = request_restart_stanza(to, sid, rid)
+    doc_elem = send_func(stanza)
+    return doc_elem
+
+
+def bind_resource(sid, rid, resource, send_func):
+    stanza = bind_resource_stanza(sid, rid, resource)
+    doc_elem = send_func(stanza)
+    return get_bound_jid(doc_elem)
+
+
+## Functions to build different payloads
+
+def create_session_stanza(to, rid):
     return (
         "<body rid='%d' "
         "xmlns='http://jabber.org/protocol/httpbind' "
@@ -69,9 +116,10 @@ def create_session(rid):
         "ver='1.6' "
         "xmpp:version='1.0' "
         "xmlns:xmpp='urn:xmpp:xbosh'/>"
-        ) % (rid, parsed_url.netloc)
+        ) % (rid, to)
 
-def auth(username, password, sid, rid):
+
+def auth_stanza(username, password, sid, rid):
     auth_token = b64encode('\0%s\0%s' % (username, password))
     return (
         "<body rid='%d' "
@@ -81,7 +129,8 @@ def auth(username, password, sid, rid):
         "</body>"
         ) % (rid, sid, auth_token)
 
-def request_restart(sid, rid):
+
+def request_restart_stanza(to, sid, rid):
     return (
         "<body rid='%d' "
         "sid='%s' "
@@ -90,9 +139,10 @@ def request_restart(sid, rid):
         "xmpp:restart='true' "
         "xmlns='http://jabber.org/protocol/httpbind' "
         "xmlns:xmpp='urn:xmpp:xbosh'/>"
-    ) % (rid, sid, parsed_bosh_service.netloc)
+    ) % (rid, sid, to)
 
-def bind_resource(sid, rid, resource):
+
+def bind_resource_stanza(sid, rid, resource):
     return (
         "<body rid='%d' "
         "sid='%s' "
@@ -108,17 +158,34 @@ def bind_resource(sid, rid, resource):
     ) % (rid, sid, resource)
 
 
+def bind_session(sid, rid):
+    return (
+        "<body rid='%s' "
+         "xmlns='http://jabber.org/protocol/httpbind' "
+         "sid='%s'>"
+         "<iq type='set' "
+         "id='_session_auth_2' "
+         "xmlns='jabber:client'>"
+         "<session xmlns='urn:ietf:params:xml:ns:xmpp-session'/>"
+         "</iq>"
+         "</body>"
+        ) % (rid, sid)
+
+
 ## Utility functions for parsing XML
 
 def document(xml_str):
     d = minidom.parseString(xml_str)
     return d.documentElement
 
+
 def xml_attr(de, attr):
     return de.getAttribute(attr)
 
+
 def get_sid(de):
     return xml_attr(de, 'sid')
+
 
 def get_mechanisms(de):
     stream_features = de.firstChild
@@ -129,11 +196,24 @@ def get_mechanisms(de):
         mechanisms = []
     return mechanisms
 
+
 def is_success(de):
     return de.firstChild.nodeName == 'success' and \
         de.firstChild.namespaceURI == 'urn:ietf:params:xml:ns:xmpp-sasl'
 
+
+def get_bound_jid(de):
+    iq = de.firstChild
+    if iq.nodeName == 'iq' and xml_attr(iq, 'type') == 'result' and xml_attr(iq, 'id') == 'bind_1':
+        jid = iq.firstChild.firstChild.firstChild.data # :todo: find better way
+        return jid
+
+
 if __name__ == '__main__':
     script, username, domain, password = sys.argv
-    jid, sid, rid = http_bind(username, domain, password)
+    bosh_service = 'http://%s/http-bind' % (domain,)
+    jid, sid, rid = http_bind(bosh_service, username, domain, password)
+    print 'Jid: %s' % jid
+    print 'Sid: %s' % sid
+    print 'Rid: %s' % rid
 

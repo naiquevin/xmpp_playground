@@ -1,8 +1,8 @@
 
-BOSH_SERVICE = 'http://localhost/http-bind';
+BOSH_SERVICE = 'http://kodecrm.kp/http-bind';
 
-DOMAIN = 'localhost';
+DOMAIN = 'kodecrm.kp';
 
-USERNAME = 'vineet';
-PASSWORD = 'naik';
+USERNAME = 'pyclient1';
+PASSWORD = 'kodeplay';
 

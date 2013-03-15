@@ -26,6 +26,10 @@
         });
     });
 
+    $("form#authForm button[type='button']").click(function () {
+        $(document).trigger('disconnect');
+    });
+
     var connection = new Strophe.Connection(BOSH_SERVICE);
     connection.rawInput = XMLConsole.rawInput;
     connection.rawOutput = XMLConsole.rawOutput;
@@ -36,21 +40,22 @@
 	        log('Strophe is connecting.');
             } else if (status == Strophe.Status.CONNFAIL) {
 	        log('Strophe failed to connect.');
-	        $('#connect').get(0).value = 'connect';
             } else if (status == Strophe.Status.DISCONNECTING) {
 	        log('Strophe is disconnecting.');
             } else if (status == Strophe.Status.DISCONNECTED) {
 	        log('Strophe is disconnected.');
-	        $('#connect').get(0).value = 'connect';
             } else if (status == Strophe.Status.CONNECTED) {
 	        log('Strophe is connected.');
-	        connection.disconnect();
             }
         });
     });
 
     $(document).bind('disconnect', function (data) {
         connection.disconnect();
+    });
+
+    $(document).bind('send_presence', function (data) {
+        connection.send($pres({}));
     });
 
 }) (window, jQuery, Strophe);
