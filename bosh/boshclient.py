@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from urlparse import urlparse
 import requests
 from functools import partial, wraps
+import uuid
 
 
 ## Public API
@@ -30,7 +31,7 @@ def http_bind(bosh_service, username, domain, password):
             rid += 1
             request_restart(to, sid, rid, send_request)
             rid +=1
-            full_jid = bind_resource(sid, rid, 'httpclient', send_request)
+            full_jid = bind_resource(sid, rid, unique_resource(), send_request)
             rid +=1
             if bind_session(sid, rid, send_request):
                 return (full_jid, sid, rid+1)
@@ -181,6 +182,10 @@ def bind_session_stanza(sid, rid):
 
 
 ## Utility functions for parsing XML
+
+def unique_resource():
+    return uuid.uuid4().hex[:-15]
+
 
 def document(xml_str):
     d = minidom.parseString(xml_str)
