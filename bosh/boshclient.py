@@ -29,12 +29,13 @@ def http_bind(bosh_service, username, domain, password):
             print 'Auth is successful'
             rid += 1
             request_restart(to, sid, rid, send_request)
-            rid += 1
+            rid +=1
             full_jid = bind_resource(sid, rid, 'httpclient', send_request)
+            rid +=1
+            if bind_session(sid, rid, send_request):
+                return (full_jid, sid, rid+1)
         else:
             raise BoshClientException('Auth failed')
-            
-    return (full_jid, sid, rid)
 
 
 ## Internals
@@ -53,11 +54,12 @@ def resp_doc(func):
     def dec(stanza, bosh_service, session):
         r = func(stanza, bosh_service, session)
         if r.status_code != 200:
-            raise BoshClientException(
+            msg = (
                 'Response failed with '
                 'Status Code: %s, '
                 'Reason: %s'
-                ) % (r.status_code, r.reason)
+            ) % (r.status_code, r.reason)
+            raise BoshClientException(msg)
         return document(r.content)
     return dec
 
@@ -100,6 +102,12 @@ def bind_resource(sid, rid, resource, send_func):
     stanza = bind_resource_stanza(sid, rid, resource)
     doc_elem = send_func(stanza)
     return get_bound_jid(doc_elem)
+
+
+def bind_session(sid, rid, send_func):
+    stanza = bind_session_stanza(sid, rid)
+    doc_elem = send_func(stanza)
+    return is_session(doc_elem)
 
 
 ## Functions to build different payloads
@@ -158,17 +166,17 @@ def bind_resource_stanza(sid, rid, resource):
     ) % (rid, sid, resource)
 
 
-def bind_session(sid, rid):
+def bind_session_stanza(sid, rid):
     return (
         "<body rid='%s' "
-         "xmlns='http://jabber.org/protocol/httpbind' "
-         "sid='%s'>"
-         "<iq type='set' "
-         "id='_session_auth_2' "
-         "xmlns='jabber:client'>"
-         "<session xmlns='urn:ietf:params:xml:ns:xmpp-session'/>"
-         "</iq>"
-         "</body>"
+        "xmlns='http://jabber.org/protocol/httpbind' "
+        "sid='%s'>"
+        "<iq type='set' "
+        "id='_session_auth' "
+        "xmlns='jabber:client'>"
+        "<session xmlns='urn:ietf:params:xml:ns:xmpp-session'/>"
+        "</iq>"
+        "</body>"
         ) % (rid, sid)
 
 
@@ -204,9 +212,14 @@ def is_success(de):
 
 def get_bound_jid(de):
     iq = de.firstChild
-    if iq.nodeName == 'iq' and xml_attr(iq, 'type') == 'result' and xml_attr(iq, 'id') == 'bind_1':
-        jid = iq.firstChild.firstChild.firstChild.data # :todo: find better way
+    if iq.nodeName == 'iq' and xml_attr(iq, 'type') == 'result':
+        jid = iq.firstChild.firstChild.firstChild.data
         return jid
+
+
+def is_session(de):
+    iq = de.firstChild
+    return iq.firstChild.nodeName == 'session'
 
 
 if __name__ == '__main__':

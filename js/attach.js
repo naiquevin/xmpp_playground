@@ -11,7 +11,7 @@
         var $form = $(e.target);
         
         var sid = $("input[name='sid']").val();
-        var rid = parseInt($("input[name='rid']").val()) + 1;
+        var rid = $("input[name='rid']").val();
         var jid = $("input[name='jid']").val();
         
         $(document).trigger('attach', {
