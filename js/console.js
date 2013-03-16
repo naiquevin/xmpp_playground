@@ -1,4 +1,4 @@
-(function (window, $, Strophe, undefined) {
+(function (window, $, Strophe, XPG, undefined) {
     
     "use strict";
 
@@ -17,6 +17,6 @@
         }
     };
 
-    window.XMLConsole = XMLConsole;
+    XPG.XMLConsole = XMLConsole;
 
-}) (window, jQuery, Strophe);
+}) (window, jQuery, Strophe, XPG);

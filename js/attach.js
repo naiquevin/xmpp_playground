@@ -1,8 +1,8 @@
-(function (window, $, Strophe, undefined) {
+(function (window, $, Strophe, XPG, undefined) {
     
     "use strict";
 
-    var XMLConsole = window.XMLConsole;
+    var XMLConsole = XPG.XMLConsole;
     var log = XMLConsole.log;
 
     $("form#attachForm").submit(function (e) {
@@ -25,38 +25,26 @@
     connection.rawInput = XMLConsole.rawInput;
     connection.rawOutput = XMLConsole.rawOutput;
 
+    // add connection object to the global namespace
+    XPG.connection = connection;
+
     $(document).bind('attach', function (e, data) {
+        var startTime = new Date();
         connection.attach(data.jid, data.sid, data.rid, function (status) {
-            console.log(status);
             if (status == Strophe.Status.DISCONNECTED) {
-	        log('Strophe is disconnected.');
+	        log('Strophe is disconnected (status: ' + status + ')');
             } else if (status == Strophe.Status.CONNECTED) {
-	        log('Strophe is attached.');
+	        log('Strophe is attached (status: ' + status + ')');
 	        connection.disconnect();
             }
         });
 
-        log('Strophe is attached.');
-
-        var iq = $iq({type: 'get'}).c('query', {xmlns: 'jabber:iq:roster'});
-        connection.sendIQ(iq, function () {
-            log('roster iq success');
-        }, function () {
-            log('roster iq error');
-        });
-
-        // connection.send($pres());
-
+        var time_taken = new Date() - startTime;
+        log('Strophe is attached. Time taken: ' + time_taken + 'ms');
     });
-
-    window.con = connection;
 
     $(document).bind('disconnect', function (data) {
         connection.disconnect();
     });
 
-    $(document).bind('send_presence', function (data) {
-        connection.send($pres({}));
-    });
-
-}) (window, jQuery, Strophe);
+}) (window, jQuery, Strophe, XPG);
