@@ -1,22 +1,23 @@
 (function (window, $, Strophe, XPG, undefined) {
-    
-    "use strict";
 
-    var $xmlconsole = $("#console");
-    var $log = $("#log");
+    "use strict";
 
     var XMLConsole = {
         rawInput: function (data) {
-            $('<li></li>').append(document.createTextNode('RECV: ' + data)).appendTo($xmlconsole);
+            $('<li></li>').append(document.createTextNode('RECV: ' + data)).appendTo($("#console"));
         },
         rawOutput: function (data) {
-            $('<li></li>').append(document.createTextNode('SENT: ' + data)).appendTo($xmlconsole);
+            $('<li></li>').append(document.createTextNode('SENT: ' + data)).appendTo($("#console"));
         },
         log: function (msg) {
-            $('<li></li>').append(document.createTextNode(msg)).appendTo($log);
+            $('<li></li>').append(document.createTextNode(msg)).appendTo($("#log"));
         }
     };
 
     XPG.XMLConsole = XMLConsole;
+
+    $.get('/bosh/console.html', function (resp) {
+        $(".container").append(resp);
+    });
 
 }) (window, jQuery, Strophe, XPG);

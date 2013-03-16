@@ -1,5 +1,5 @@
 (function (window, $, Strophe, XPG, undefined) {
-    
+
     "use strict";
 
     var XMLConsole = XPG.XMLConsole;
@@ -8,10 +8,10 @@
     var connection = XPG.connection;
 
     XPG.Roster = {
-        
+
         get: function (processItem) {
             var iq = $iq({type: 'get'}).c('query', {xmlns: 'jabber:iq:roster'});
-            connection.sendIQ(iq, function (iq) {
+            XPG.connection.sendIQ(iq, function (iq) {
                 $(iq).find('item').each(function () {
                     var jid = $(this).attr('jid');
                     var name = $(this).attr('name') || jid;
@@ -24,6 +24,14 @@
                 log('IQ get request failed!');
             });
         }
-    }
+    };
+
+    $.ajax({
+        url: '/bosh/rosterPanel.html',
+        success: function (resp) {
+            $("#controls").append(resp);
+            $(".getRosterBtn").click(XPG.Roster.get);
+        }
+    });
 
 }) (window, jQuery, Strophe, XPG);

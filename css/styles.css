@@ -1,21 +1,19 @@
 
 .container {
-    width: 1000px;
-    margin: 0 auto;
+    width: 100%;
 }
 
 input { padding: 5px; border: 1px solid #ccc; }
 button { padding: 4px; }
 
 ul.console {
-    margin: 20px 0;
     padding: 20px 10px;
     background: #222;
     color: #f7f7f7;
-    width: 90%;
     overflow-y: auto;
     list-style: none;
-    font-family: courier;    
+    font-family: monospace;
+    font-style: 12px;
 }
 
 ul.console li {
@@ -24,8 +22,23 @@ ul.console li {
 
 #console {
     height: 300px;
+    float: left;
+    width: 58%;
 }
 
 #log {
-    height: 200px;
+    height: 300px;
+    float: right;
+    width: 38%;
+    text-align: right;
 }
+
+.controlPanel {
+    margin-bottom: 10px;
+}
+
+#attachForm input {
+    width: 240px;
+}
+
+.clear { clear: both; }
