@@ -2,3 +2,5 @@
 *.pyc
 
 config.js
+
+bosh/env
