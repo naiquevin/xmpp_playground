@@ -1,4 +1,4 @@
-(function (window, $, Strophe, XPG, undefined) {
+(function (window, $, Strophe, docCookies, XPG, undefined) {
 
     "use strict";
 
@@ -6,6 +6,13 @@
     var log = XMLConsole.log;
 
     var init = function () {
+
+        if (docCookies.hasItem('sid')) {
+            $("input[name='jid']").val(docCookies.getItem('jid'));
+            $("input[name='sid']").val(docCookies.getItem('sid'));
+            $("input[name='rid']").val(docCookies.getItem('rid'));
+        }
+
         $("form#attachForm").submit(function (e) {
             e.preventDefault();
 
@@ -22,7 +29,7 @@
             });
         });
 
-        $("form#attachForm button[type='button']").click(function () {
+        $("form#attachForm .disconnectBtn").click(function () {
             $(document).trigger('disconnect');
         });
 
@@ -51,6 +58,21 @@
         $(document).bind('disconnect', function (data) {
             connection.disconnect();
         });
+
+        $("form#attachForm .saveCookieBtn").click(function () {
+            docCookies.setItem('jid', connection.jid);
+            docCookies.setItem('sid', connection.sid);
+            window.onbeforeunload = function () {
+                docCookies.setItem('rid', parseInt(connection.rid));
+            };
+        });
+
+        $("form#attachForm .clearCookieBtn").click(function () {
+            docCookies.removeItem('jid');
+            docCookies.removeItem('sid');
+            docCookies.removeItem('rid');
+            $("input", $(this).parent()).val('');
+        });
     };
 
     $.ajax({
@@ -62,4 +84,4 @@
     });
 
 
-}) (window, jQuery, Strophe, XPG);
+}) (window, jQuery, Strophe, docCookies, XPG);

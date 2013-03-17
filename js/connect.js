@@ -28,7 +28,7 @@
             });
         });
 
-        $("form#authForm button[type='button']").click(function () {
+        $("form#authForm .disconnectBtn").click(function () {
             $(document).trigger('disconnect');
         });
 
