@@ -63,7 +63,7 @@
     };
 
     $.ajax({
-        url: '/bosh/authForm.html',
+        url: '/html/_authForm.html',
         success: function (resp) {
             $("#controls").append(resp);
             init();

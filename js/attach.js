@@ -76,7 +76,7 @@
     };
 
     $.ajax({
-        url: '/bosh/attachForm.html',
+        url: '/html/_attachForm.html',
         success: function (resp) {
             $("#controls").append(resp);
             init();

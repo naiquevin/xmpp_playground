@@ -27,7 +27,7 @@
     };
 
     $.ajax({
-        url: '/bosh/rosterPanel.html',
+        url: '/html/_rosterPanel.html',
         success: function (resp) {
             $("#controls").append(resp);
             $(".getRosterBtn").click(XPG.Roster.get);

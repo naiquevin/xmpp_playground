@@ -35,7 +35,7 @@
     };
 
     $.ajax({
-        url: '/bosh/presencePanel.html',
+        url: '/html/_presencePanel.html',
         success: function (resp) {
             var p = XPG.Presence;
             $("#controls").append(resp);

@@ -16,7 +16,7 @@
 
     XPG.XMLConsole = XMLConsole;
 
-    $.get('/bosh/console.html', function (resp) {
+    $.get('/html/_console.html', function (resp) {
         $(".container").append(resp);
     });
 
