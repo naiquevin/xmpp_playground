@@ -73,6 +73,27 @@
             docCookies.removeItem('rid');
             $("input", $(this).parent()).val('');
         });
+
+        $("form#createSessionForm .createSessionBtn").click(function () {
+            var startTime = new Date();
+            var username = $("input[name='username']").val();
+            var password = $("input[name='password']").val();
+            if (username && password) {
+                $.ajax({
+                    url: BOSH_SESSION_SERVICE,
+                    data: {'username': username, 'password': password},
+                    dataType: 'jsonp',
+                    success: function (resp) {
+                        resp = JSON.parse(resp);
+                        $("input[name='jid']").val(resp.full_jid);
+                        $("input[name='sid']").val(resp.sid);
+                        $("input[name='rid']").val(resp.rid);
+                        var endTime = new Date();
+                        log('Session creation via jsonp took: ' + (endTime - startTime) + 'ms');
+                    }
+                });
+            }
+        });
     };
 
     $.ajax({
@@ -82,6 +103,5 @@
             init();
         }
     });
-
 
 }) (window, jQuery, Strophe, docCookies, XPG);
