@@ -35,7 +35,7 @@
     };
 
     $.ajax({
-        url: '/html/_presencePanel.html',
+        url: '_presencePanel.html',
         success: function (resp) {
             var p = XPG.Presence;
             $("#controls").append(resp);

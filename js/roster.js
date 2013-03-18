@@ -27,7 +27,7 @@
     };
 
     $.ajax({
-        url: '/html/_rosterPanel.html',
+        url: '_rosterPanel.html',
         success: function (resp) {
             $("#controls").append(resp);
             $(".getRosterBtn").click(XPG.Roster.get);
