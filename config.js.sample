@@ -6,3 +6,5 @@ DOMAIN = 'localhost';
 USERNAME = 'vineet';
 PASSWORD = 'naik';
 
+BOSH_SESSION_SERVICE = 'http://127.0.0.1:8000/jabber/session/create'
+
