@@ -97,7 +97,7 @@
     };
 
     $.ajax({
-        url: '_attachForm.html',
+        url: DIR_BASE + 'html/_attachForm.html',
         success: function (resp) {
             $("#controls").append(resp);
             init();

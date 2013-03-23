@@ -63,7 +63,7 @@
     };
 
     $.ajax({
-        url: '_authForm.html',
+        url: DIR_BASE + 'html/_authForm.html',        
         success: function (resp) {
             $("#controls").append(resp);
             init();
